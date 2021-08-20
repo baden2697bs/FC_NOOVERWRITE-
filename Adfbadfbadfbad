@@ -1,0 +1,24 @@
+#include <File.au3>
+; define your pathes
+Local $sDestinationPath = @DesktopDir
+Local $sPathSciTE = ; FILL IN YOUR PATH HERE
+; find the last test file
+Local $aTestFiles = _FileListToArray($sDestinationPath, "test*.au3", $FLTA_FILES) ; search existing test*.au3
+Local $sTestFiles = _ArrayToString($aTestFiles) ; make a string of it
+$aTestFiles = StringRegExp($sTestFiles, "(?i)test(\d+)\.au3", $STR_REGEXPARRAYGLOBALMATCH) ; search all test*-files with digits between test and extension au3
+For $i = 0 To UBound($aTestFiles) -1
+    $aTestFiles[$i] = Number($aTestFiles[$i]) ; make them all to numbers
+Next
+_ArraySort($aTestFiles) ; sort them
+Local $iLastNumber = $aTestFiles[UBound($aTestFiles) - 1] ; that is the highest number
+; create the next test file
+Local $sNewFile = $sDestinationPath & "\test" & $iLastNumber + 1 & ".au3" ; adding 1 to the last file
+Local $File = FileOpen($sNewFile, $FO_OVERWRITE) ; open the file in overwrite mode
+FileWrite($File, ClipGet()) ; put the clipboard inside
+FileClose($File) ; close the file
+; open the test file in SciTE
+If Not WinExists("[CLASS:SciTEWindow]") Then ShellExecute($sPathSciTE) ; so all last opened tabs are opened too
+While Not WinExists("[CLASS:SciTEWindow]")
+    Sleep(100)
+WEnd
+RunWait('"' & $sPathSciTE & '" "' & $sNewFile & '"', $sDestinationPath, @SW_HIDE)
